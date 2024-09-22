@@ -2,10 +2,10 @@ import torch
 from data_preprocessing import DataPreprocessor
 from embedding_generation import EmbeddingGenerator
 from Enum.data_type import DataType
-from training import Trainer
+from training import Trainer, arithmetic_loss 
 import torch.nn as nn
 import torch.optim as optim
-from model import SimpleNN  # Import the model
+from model import SimpleNN  # Import the updated SimpleNN model
 
 def main():
     # File paths to datasets
@@ -32,17 +32,16 @@ def main():
     train_labels = processed_train_data['labels']
     test_labels = processed_test_data['labels']
 
-    # Initialize model, criterion, optimizer
-    model = SimpleNN()  # Use the defined SimpleNN model
-    criterion = nn.CrossEntropyLoss()  # Use CrossEntropyLoss for classification
-    optimizer = optim.Adam(model.parameters(), lr=0.001)  # Use Adam optimizer
+    model = SimpleNN(num_classes=4)  # Update with number of output classes
+    criterion = nn.CrossEntropyLoss()  # Use a standard loss function like CrossEntropyLoss
+    optimizer = optim.Adam(model.parameters(), lr=0.001, weight_decay=1e-5)
 
     # Move model to GPU if available
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
 
-    # Train the model
-    trainer = Trainer(model, criterion, optimizer, batch_size=32, num_epochs=10, use_amp=True)
+    use_amp = torch.cuda.is_available()  # Enable AMP only if CUDA is available
+    trainer = Trainer(model, criterion, optimizer, batch_size=32, num_epochs=10, use_amp=use_amp)
     trainer.train(train_embeddings, train_labels)
 
 if __name__ == "__main__":
